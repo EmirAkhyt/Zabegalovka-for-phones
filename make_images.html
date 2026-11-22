@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="UTF-8"><title>Генератор картинок для APK</title></head>
+<body style="background:#0f172a;color:white;font-family:sans-serif;text-align:center;padding:30px;">
+  <h2>Нажми кнопку ниже — браузер скачает 4 готовых PNG-файла в папку «Загрузки»!</h2>
+  <button id="gen" style="padding:16px 28px;font-size:18px;font-weight:bold;background:#22c55e;color:white;border:none;border-radius:12px;cursor:pointer;">
+    📥 СКАЧАТЬ ИКОНКИ И СКРИНШОТЫ
+  </button>
+  <script>
+    function downloadCanvas(w, h, filename, drawFn) {
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      drawFn(ctx, w, h);
+      const a = document.createElement('a');
+      a.download = filename;
+      a.href = c.toDataURL('image/png');
+      a.click();
+    }
+
+    function drawBurgerArt(ctx, w, h, title) {
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, w, h);
+      const cx = w / 2, cy = h / 2, r = Math.min(w, h) * 0.28;
+      // Нижняя булка
+      ctx.fillStyle = '#d97706';
+      ctx.fillRect(cx - r, cy + r * 0.35, r * 2, r * 0.35);
+      // Котлета
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(cx - r * 1.05, cy + r * 0.1, r * 2.1, r * 0.25);
+      // Сыр
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(cx - r * 1.1, cy, r * 2.2, r * 0.12);
+      // Салат
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(cx - r * 1.12, cy - r * 0.12, r * 2.24, r * 0.12);
+      // Верхняя булка
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.arc(cx, cy - r * 0.12, r, Math.PI, 0);
+      ctx.fill();
+      if (title) {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold ' + Math.round(h * 0.06) + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(title, cx, h * 0.88);
+      }
+    }
+
+    document.getElementById('gen').onclick = () => {
+      downloadCanvas(192, 192, 'icon-192.png', (ctx, w, h) => drawBurgerArt(ctx, w, h, ''));
+      setTimeout(() => downloadCanvas(512, 512, 'icon-512.png', (ctx, w, h) => drawBurgerArt(ctx, w, h, '')), 300);
+      setTimeout(() => downloadCanvas(1280, 720, 'screen-wide.png', (ctx, w, h) => drawBurgerArt(ctx, w, h, 'ЗАБЕГАЛОВКА — 3D КУХНЯ')), 600);
+      setTimeout(() => downloadCanvas(720, 1280, 'screen-mobile.png', (ctx, w, h) => drawBurgerArt(ctx, w, h, 'ЗАБЕГАЛОВКА 3D')), 900);
+    };
+  </script>
+</body>
+</html>
