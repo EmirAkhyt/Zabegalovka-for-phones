@@ -2,7 +2,6 @@ const player = { x: 0, z: 85, eyeY: 78, yaw: 0, pitch: -0.10, speed: 3.3, walkAn
 const keys = new Set();
 let lookedTarget = null;
 
-// Переменные сенсорного джойстика и камеры
 let joyForward = 0;
 let joyStrafe = 0;
 let joyTouchId = null;
@@ -42,7 +41,6 @@ window.addEventListener('click', (e) => {
   }
 });
 
-// Инициализация сенсорного управления (джойстик, поворот камеры пальцем, кнопка E)
 function initTouchControls() {
   const joyZone = document.getElementById('joy-zone');
   const joyStick = document.getElementById('joy-stick');
@@ -70,7 +68,6 @@ function initTouchControls() {
     });
   }
 
-  // Виртуальный джойстик ходьбы слева
   if (joyZone) {
     joyZone.addEventListener('touchstart', (e) => {
       e.preventDefault();
@@ -121,8 +118,8 @@ function initTouchControls() {
     joyForward = -dy / maxRadius;
   }
 
-  // Вращение камеры пальцем по экрану
   gameCanvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
     if (isGamePaused) return;
     for (let i = 0; i < e.changedTouches.length; i++) {
       const t = e.changedTouches[i];
@@ -132,9 +129,10 @@ function initTouchControls() {
         lastLookY = t.clientY;
       }
     }
-  }, { passive: true });
+  }, { passive: false });
 
   gameCanvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
     if (isGamePaused) return;
     for (let i = 0; i < e.changedTouches.length; i++) {
       const t = e.changedTouches[i];
@@ -150,17 +148,18 @@ function initTouchControls() {
         if (player.pitch < -0.7) player.pitch = -0.7;
       }
     }
-  }, { passive: true });
+  }, { passive: false });
 
   const endLook = (e) => {
+    e.preventDefault();
     for (let i = 0; i < e.changedTouches.length; i++) {
       if (e.changedTouches[i].identifier === lookTouchId) {
         lookTouchId = null;
       }
     }
   };
-  gameCanvas.addEventListener('touchend', endLook);
-  gameCanvas.addEventListener('touchcancel', endLook);
+  gameCanvas.addEventListener('touchend', endLook, { passive: false });
+  gameCanvas.addEventListener('touchcancel', endLook, { passive: false });
 }
 
 initTouchControls();
@@ -176,6 +175,8 @@ function updatePlayer() {
   if (keys.has('KeyD') || keys.has('ArrowRight')) strafe += 1;
   if (keys.has('KeyA') || keys.has('ArrowLeft')) strafe -= 1;
 
+  const currentSpeed = upgShoes.bought ? 5.2 : player.speed;
+
   if (Math.abs(forward) > 0.05 || Math.abs(strafe) > 0.05) {
     const sin = Math.sin(player.yaw);
     const cos = Math.cos(player.yaw);
@@ -188,8 +189,8 @@ function updatePlayer() {
       dx /= len;
       dz /= len;
     }
-    dx *= player.speed;
-    dz *= player.speed;
+    dx *= currentSpeed;
+    dz *= currentSpeed;
 
     let nextX = player.x + dx;
     let nextZ = player.z + dz;
@@ -227,7 +228,9 @@ function detectLookTarget() {
     { id: 'customer', x: 0, z: -65, label: 'Отдать заказ покупателю' },
     { id: 'cheese', x: 75, z: -10, label: 'Добавить ломтик сыра' },
     { id: 'salad', x: 135, z: -10, label: 'Добавить свежий салат' },
-    { id: 'trash', x: 165, z: 55, label: 'Выбросить бургер в ведро' },
+    { id: 'fryer', x: 165, z: 22, label: 'Фритюрница: Картошка Фри' },
+    { id: 'cola', x: 165, z: 62, label: 'Автомат: Налить Колу' },
+    { id: 'trash', x: 165, z: 105, label: 'Выбросить заказ в ведро' },
     { id: 'computer', x: -165, z: 65, label: 'Открыть сайт ПоварБургер.com' }
   );
 

@@ -26,6 +26,12 @@ let burgerLayers = new Array();
 let smokeParticles = new Array();
 let isClosed = false;
 
+// Новые блюда: Фри и Кола
+let isFryingPotatoes = false;
+let fryerLevel = 0;
+let hasFriesOnTray = false;
+let hasColaOnTray = false;
+
 function handleInteractE() {
   if (!lookedTarget) return;
 
@@ -44,7 +50,7 @@ function handleInteractE() {
       burgerLayers.push({ type: 'bun_top', h: 9, r: 15, color: '#b45309', topColor: '#ea580c' });
       isClosed = true;
       playSound(380, 0.15);
-      statusText.innerText = '🍔 Бургер накрыт! Посмотри в окно на покупателя и нажми [E]!';
+      statusText.innerText = '🍔 Бургер накрыт! Проверь, нужны ли Фри или Кола, и отдавай в окно!';
     } else {
       statusText.innerText = 'Бургер уже закрыт верхней булкой!';
     }
@@ -81,7 +87,7 @@ function handleInteractE() {
       cookLevel = 0;
 
       if (isBurned) {
-        statusText.innerText = '💀 Котлета сгорела! Выброси бургер в ведро справа.';
+        statusText.innerText = '💀 Котлета сгорела! Выброси заказ в ведро справа.';
         playSound(120, 0.4, 'sawtooth');
       } else {
         statusText.innerText = '🥩 Котлета в бургере! Добавь сыр/салат или закрой булкой.';
@@ -110,13 +116,48 @@ function handleInteractE() {
     statusText.innerText = '🥬 Салат добавлен в бургер!';
   }
 
+  // Фритюрница (Картошка Фри)
+  else if (lookedTarget.id === 'fryer') {
+    if (!isFryingPotatoes) {
+      isFryingPotatoes = true;
+      fryerLevel = 0;
+      playSound(220, 0.25, 'sawtooth');
+      statusText.innerText = '🍟 Картошка жарится во фритюре! Подожди пару секунд...';
+    } else {
+      if (fryerLevel < 55) {
+        statusText.innerText = '⚠️ Картошка ещё не подрумянилась! Подожди ещё чуть-чуть.';
+        return;
+      }
+      isFryingPotatoes = false;
+      fryerLevel = 0;
+      hasFriesOnTray = true;
+      playSound(560, 0.18);
+      statusText.innerText = '🍟 Золотистая Картошка Фри готова на подносе!';
+    }
+  }
+
+  // Автомат с колой
+  else if (lookedTarget.id === 'cola') {
+    if (hasColaOnTray) {
+      statusText.innerText = '🥤 Стакан Колы уже стоит на подносе!';
+      return;
+    }
+    hasColaOnTray = true;
+    playSound(490, 0.2);
+    statusText.innerText = '🥤 Холодная Кола налита и поставлена на поднос!';
+  }
+
+  // Мусорное ведро
   else if (lookedTarget.id === 'trash') {
     burgerLayers = new Array();
     isClosed = false;
+    hasFriesOnTray = false;
+    hasColaOnTray = false;
     playSound(200, 0.2);
-    statusText.innerText = '🗑️ Бургер выброшен в ведро!';
+    statusText.innerText = '🗑️ Весь заказ выброшен в ведро!';
   }
 
+  // Выдача заказа покупателю
   else if (lookedTarget.id === 'customer') {
     if (!currentCustomer) {
       statusText.innerText = '⏳ Сейчас у окна никого нет — ждём следующего клиента!';
@@ -144,20 +185,37 @@ function handleInteractE() {
     });
 
     const req = currentCustomer.order;
-    if (pattyCount !== req.patty || cheeseCount !== req.cheese || saladCount !== req.salad) {
+    const needFries = req.fries > 0;
+    const needCola = req.cola > 0;
+
+    if (
+      pattyCount !== req.patty ||
+      cheeseCount !== req.cheese ||
+      saladCount !== req.salad ||
+      hasFriesOnTray !== needFries ||
+      hasColaOnTray !== needCola
+    ) {
       statusText.innerText = '😠 ' + currentCustomer.name + ': «Не то! Я заказывал: ' + req.title + '»';
       customerShake = 25;
       playSound(140, 0.35, 'sawtooth');
       return;
     }
 
-    const earned = addDayEarnings(req.reward);
+    // Расчёт VIP-бонуса за скорость (×2 если таймер VIP-гостя не успел закончиться)
+    const vipBonus = (currentCustomer.isVip && currentCustomer.vipTimer > 0) ? 2 : 1;
+    const earned = addDayEarnings(req.reward * vipBonus);
+
     playSound(660, 0.15);
     setTimeout(() => playSound(880, 0.25), 140);
-    statusText.innerText = '🎉 +' + earned + ' ₽ от ' + currentCustomer.name + '! Новый клиент через 10 сек.';
+    statusText.innerText = vipBonus > 1
+      ? '🎩 VIP-ЧАЕВЫЕ ×2! +' + earned + ' ₽! Новый клиент скоро.'
+      : '🎉 +' + earned + ' ₽ от ' + currentCustomer.name + '! Новый клиент скоро.';
+
     burgerLayers = new Array();
     isClosed = false;
-    scheduleNextCustomer(10);
+    hasFriesOnTray = false;
+    hasColaOnTray = false;
+    scheduleNextCustomer();
   }
 }
 
@@ -253,63 +311,58 @@ function queueBurgerLayer3D(cx, cy, cz, layer) {
       drawCylinder3DImmediate(cx, cy, cz, layer.r, layer.h, layer.color, layer.topColor, layer.type === 'bun_top');
 
       if (layer.type === 'patty') {
-        ctx.strokeStyle = '#270e02';
-        ctx.lineWidth = Math.max(1.2, 2 * top.scale);
-        ctx.beginPath();
-        ctx.moveTo(top.x - radX * 0.55, top.y - radY * 0.25);
-        ctx.lineTo(top.x + radX * 0.55, top.y - radY * 0.25);
-        ctx.moveTo(top.x - radX * 0.65, top.y + radY * 0.15);
-        ctx.lineTo(top.x + radX * 0.65, top.y + radY * 0.15);
-        ctx.stroke();
-      }
-
-      if (layer.type === 'bun_top') {
-        ctx.fillStyle = '#fef3c7';
-        const seeds = new Array(
-          { sx: -0.42, sy: -0.22 },
-          { sx: -0.15, sy: -0.35 },
-          { sx: 0.22, sy: -0.30 },
-          { sx: 0.45, sy: -0.15 },
-          { sx: -0.25, sy: -0.08 },
-          { sx: 0.08, sy: -0.12 },
-          { sx: 0.32, sy: 0.02 }
-        );
-        seeds.forEach(s => {
-          ctx.beginPath();
-          ctx.ellipse(
-            bot.x + radX * s.sx,
-            bot.y + radX * s.sy,
-            Math.max(1.2, 2.2 * bot.scale),
-            Math.max(0.8, 1.3 * bot.scale),
-            0.3, 0, Math.PI * 2
-          );
-          ctx.fill();
-        });
-      }
-    }
-  });
+ctx.strokeStyle = '#270e02';
+ctx.lineWidth = Math.max(1.2, 2 * top.scale);
+ctx.beginPath();
+ctx.moveTo(top.x - radX * 0.55, top.y - radY * 0.25);
+ctx.lineTo(top.x + radX * 0.55, top.y - radY * 0.25);
+ctx.moveTo(top.x - radX * 0.65, top.y + radY * 0.15);
+ctx.lineTo(top.x + radX * 0.65, top.y + radY * 0.15);
+ctx.stroke();
 }
-
+if (layer.type === 'bun_top') {
+ctx.fillStyle = '#fef3c7';
+const seeds = new Array(
+{ sx: -0.42, sy: -0.22 },
+{ sx: -0.15, sy: -0.35 },
+{ sx: 0.22, sy: -0.30 },
+{ sx: 0.45, sy: -0.15 },
+{ sx: -0.25, sy: -0.08 },
+{ sx: 0.08, sy: -0.12 },
+{ sx: 0.32, sy: 0.02 }
+);
+seeds.forEach(s => {
+ctx.beginPath();
+ctx.ellipse(
+bot.x + radX * s.sx,
+bot.y + radX * s.sy,
+Math.max(1.2, 2.2 * bot.scale),
+Math.max(0.8, 1.3 * bot.scale),
+0.3, 0, Math.PI * 2
+);
+ctx.fill();
+});
+}
+}
+});
+}
 function drawCylinder3DImmediate(cx, cy, cz, r, h, sideColor, topColor, isDome) {
-  const bot = project3D(cx, cy, cz);
-  const top = project3D(cx, cy + h, cz);
-  if (!bot.visible || !top.visible) return;
-
-  const radX = r * bot.scale;
-  const radY = r * 0.45 * bot.scale;
-
-  ctx.fillStyle = sideColor;
-  ctx.beginPath();
-  ctx.ellipse(bot.x, bot.y, radX, radY, 0, 0, Math.PI);
-  ctx.lineTo(top.x - radX, top.y);
-  ctx.ellipse(top.x, top.y, radX, radY, 0, Math.PI, 0, true);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle = topColor;
-  ctx.beginPath();
-  if (isDome) {
-    ctx.ellipse(bot.x, bot.y, radX, radX * 0.75, 0, Math.PI, 0);
+const bot = project3D(cx, cy, cz);
+const top = project3D(cx, cy + h, cz);
+if (!bot.visible || !top.visible) return;
+const radX = r * bot.scale;
+const radY = r * 0.45 * bot.scale;
+ctx.fillStyle = sideColor;
+ctx.beginPath();
+ctx.ellipse(bot.x, bot.y, radX, radY, 0, 0, Math.PI);
+ctx.lineTo(top.x - radX, top.y);
+ctx.ellipse(top.x, top.y, radX, radY, 0, Math.PI, 0, true);
+ctx.closePath();
+ctx.fill();
+ctx.fillStyle = topColor;
+ctx.beginPath();
+if (isDome) {
+ctx.ellipse(bot.x, bot.y, radX, radX * 0.75, 0, Math.PI, 0);
 ctx.ellipse(bot.x, bot.y, radX, radY, 0, 0, Math.PI);
 } else {
 ctx.ellipse(top.x, top.y, radX, radY, 0, 0, Math.PI * 2);
@@ -473,12 +526,37 @@ drawBox3DImmediate(-156, 24, 48, 6, 2, 4, '#f8fafc', '#cbd5e1');
 }
 });
 }
+// Станции справа: Фритюрница (x=165, z=22) и Автомат с Колой (x=165, z=62)
+function queueRightStations3D() {
+// Фритюрница
+renderQueue.push({
+dist: Math.hypot(165 - player.x, 22 - player.z),
+draw: () => {
+drawBox3DImmediate(165, 0, 22, 34, 24, 34, '#94a3b8', '#475569');
+drawBox3DImmediate(165, 24, 22, 26, 4, 26, '#eab308', '#ca8a04');
+if (isFryingPotatoes) {
+const lift = fryerLevel >= 55 ? 7 : 2;
+const fryCol = fryerLevel >= 55 ? '#facc15' : '#fef08a';
+drawBox3DImmediate(165, 26 + lift, 22, 18, 8, 18, fryCol, '#eab308');
+}
+}
+});
+// Автомат с Колой
+renderQueue.push({
+dist: Math.hypot(165 - player.x, 62 - player.z),
+draw: () => {
+drawBox3DImmediate(165, 0, 62, 34, 24, 34, '#1e293b', '#0f172a');
+drawBox3DImmediate(168, 24, 62, 24, 28, 28, '#dc2626', '#991b1b');
+drawBox3DImmediate(154, 26, 62, 4, 18, 20, '#0f172a', '#1e293b');
+}
+});
+}
 function drawWindowSign() {
 const signPos = project3D(0, 126, -45);
 if (signPos.visible) {
 const sw = 92 * signPos.scale;
 const sh = 20 * signPos.scale;
-ctx.fillStyle = '#dc2626';
+ctx.fillStyle = upgSign.bought ? '#ca8a04' : '#dc2626';
 ctx.fillRect(signPos.x - sw / 2, signPos.y - sh / 2, sw, sh);
 ctx.strokeStyle = '#ffffff';
 ctx.lineWidth = 2;
@@ -486,7 +564,7 @@ ctx.strokeRect(signPos.x - sw / 2, signPos.y - sh / 2, sw, sh);
 ctx.fillStyle = '#ffffff';
 ctx.font = 'bold ' + Math.max(9, Math.round(12 * signPos.scale)) + 'px Segoe UI';
 ctx.textAlign = 'center';
-ctx.fillText('ЗАКАЗЫ', signPos.x, signPos.y + 4 * signPos.scale);
+ctx.fillText(upgSign.bought ? '★ VIP ЗАКАЗЫ ★' : 'ЗАКАЗЫ', signPos.x, signPos.y + 4 * signPos.scale);
 }
 }
 function drawFirstPersonHands() {
@@ -524,6 +602,7 @@ renderQueue = new Array();
 queueOutsideWorld();
 queueAllWalls();
 queueComputerDesk3D();
+queueRightStations3D();
 queueHiredChefs3D();
 if (currentCustomer) {
 renderQueue.push({
@@ -531,17 +610,35 @@ dist: Math.hypot(0 - player.x, -92 - player.z),
 draw: () => drawCustomerBody3D()
 });
 }
-queueBox3D(-135, 0, -10, 44, 24, 44, '#1e293b', '#0f172a');
+// Плита слева (если куплена Турбо-плита — она подсвечена золотой окантовкой)
+queueBox3D(-135, 0, -10, 44, 24, 44, upgStove.bought ? '#ca8a04' : '#1e293b', '#0f172a');
 queueCylinder3D(-135, 24, -10, 18, 6, '#18181b', '#27272a', false);
 queueBox3D(-75, 0, -10, 44, 24, 44, '#d97706', '#92400e');
 queueCylinder3D(-75, 24, -10, 11, 6, '#b45309', '#f59e0b', true);
 queueBox3D(75, 0, -10, 44, 24, 44, '#eab308', '#a16207');
 queueBox3D(135, 0, -10, 44, 24, 44, '#16a34a', '#15803d');
+// Доска сборки на подоконнике
 queueBox3D(-24, 28, -50, 32, 2, 18, '#b45309', '#78350f');
-queueCylinder3D(165, 0, 55, 18, 26, '#334155', '#0f172a', false);
+// Поднос справа на подоконнике для Картошки Фри и Колы (x = 22, z = -50)
+queueBox3D(22, 28, -50, 36, 2, 18, '#cbd5e1', '#64748b');
+if (hasFriesOnTray) {
+queueBox3D(13, 30, -50, 11, 10, 10, '#dc2626', '#b91c1c');
+queueBox3D(13, 40, -50, 10, 5, 8, '#facc15', '#eab308');
+}
+if (hasColaOnTray) {
+queueCylinder3D(30, 30, -50, 5, 14, '#dc2626', '#ffffff', false);
+queueBox3D(30, 44, -50, 1.5, 5, 1.5, '#38bdf8', '#0284c7');
+}
+// Мусорное ведро справа у задней части стены
+queueCylinder3D(165, 0, 105, 18, 26, '#334155', '#0f172a', false);
+// Жарка картошки во фритюрнице
+if (isFryingPotatoes && !isGamePaused && !isDayEnded && !isSecondShopModalOpen) {
+fryerLevel += 0.45;
+}
+// Жарка котлеты (с учётом Турбо-плиты ×2)
 if (hasPattyOnPan) {
 if (!isGamePaused && !isDayEnded && !isSecondShopModalOpen) {
-cookLevel += 0.35;
+cookLevel += upgStove.bought ? 0.70 : 0.35;
 }
 let sideCol = '#db2777';
 let topCol = '#f472b6';

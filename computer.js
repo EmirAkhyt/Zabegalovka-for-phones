@@ -4,12 +4,38 @@ let sashaHoldingPatty = false;
 const computerOverlay = document.getElementById('computer-overlay');
 const btnClosePc = document.getElementById('btn-close-pc');
 
+// Персонал
 const staffFryer = {
   id: 'fryer',
   name: '👨‍🍳 Шеф-гриль Саша',
   desc: 'Сам жарит котлеты строго по заказу, вовремя снимает до подгорания и кладёт на бургер.',
   price: 2500,
   hired: false
+};
+
+// Улучшения оборудования
+const upgStove = {
+  id: 'upg_stove',
+  name: '⚡ Турбо-плита (×2 скорость)',
+  desc: 'Котлеты жарятся в 2 раза быстрее (работает и для тебя, и для Саши).',
+  price: 1200,
+  bought: false
+};
+
+const upgShoes = {
+  id: 'upg_shoes',
+  name: '👟 Скоростные кроссовки',
+  desc: 'Увеличивают скорость бега по кухне на 60%.',
+  price: 900,
+  bought: false
+};
+
+const upgSign = {
+  id: 'upg_sign',
+  name: '✨ Золотая вывеска',
+  desc: 'Новые покупатели приходят каждые 5 секунд вместо 10.',
+  price: 1500,
+  bought: false
 };
 
 function openComputerSite() {
@@ -30,50 +56,55 @@ function closeComputerSite() {
   isGamePaused = false;
   computerOverlay.style.display = 'none';
 
+  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
   const gameCanvas = document.getElementById('game3d');
-  if (gameCanvas && gameCanvas.requestPointerLock) {
+  if (!isTouchDevice && gameCanvas && gameCanvas.requestPointerLock) {
     gameCanvas.requestPointerLock();
   }
 }
 
 btnClosePc.addEventListener('click', closeComputerSite);
 
-function tryHireWorker(worker) {
-  if (worker.hired) return;
+function tryBuyItem(item, isWorker) {
+  const alreadyOwned = isWorker ? item.hired : item.bought;
+  if (alreadyOwned) return;
 
-  if (!spendFromWallet(worker.price)) {
+  if (!spendFromWallet(item.price)) {
     playSound(140, 0.3, 'sawtooth');
-    renderWorkersSite('❌ Недостаточно денег в кассе! Нужно ' + worker.price + ' ₽, а у тебя ' + totalCoins + ' ₽.');
+    renderWorkersSite('❌ Недостаточно денег в кассе! Нужно ' + item.price + ' ₽, а у тебя ' + totalCoins + ' ₽.');
     return;
   }
 
-  worker.hired = true;
+  if (isWorker) item.hired = true;
+  else item.bought = true;
+
   saveGameProgress();
   playSound(660, 0.15);
   setTimeout(() => playSound(880, 0.25), 140);
-  statusText.innerText = '🎉 ' + worker.name + ' вышел на смену! Из кассы списано ' + worker.price + ' ₽.';
-  renderWorkersSite('✅ Нанят: ' + worker.name + ' (-' + worker.price + ' ₽ из кассы)');
+  statusText.innerText = '🎉 Куплено: ' + item.name + ' (-' + item.price + ' ₽)!';
+  renderWorkersSite('✅ Успешно оформлено: ' + item.name + ' (-' + item.price + ' ₽)');
 }
 
-function createWorkerCardElement(worker) {
+function createShopCardElement(item, isWorker) {
   const card = document.createElement('div');
   card.className = 'worker-card';
 
   const info = document.createElement('div');
   info.className = 'worker-info';
-  info.innerHTML = '<h3>' + worker.name + '</h3><p>' + worker.desc + '</p>';
+  info.innerHTML = '<h3>' + item.name + '</h3><p>' + item.desc + '</p>';
 
   const btn = document.createElement('button');
   btn.type = 'button';
 
-  if (worker.hired) {
+  const owned = isWorker ? item.hired : item.bought;
+  if (owned) {
     btn.className = 'hire-btn hired';
-    btn.innerText = '✅ Нанят в штат';
+    btn.innerText = isWorker ? '✅ В штате' : '✅ Установлено';
   } else {
     btn.className = 'hire-btn';
-    btn.innerText = 'Нанять за ' + worker.price + ' ₽';
+    btn.innerText = (isWorker ? 'Нанять за ' : 'Купить за ') + item.price + ' ₽';
     btn.onclick = function () {
-      tryHireWorker(worker);
+      tryBuyItem(item, isWorker);
     };
   }
 
@@ -99,7 +130,10 @@ function renderWorkersSite(alertMessage) {
     container.appendChild(msgBox);
   }
 
-  container.appendChild(createWorkerCardElement(staffFryer));
+  container.appendChild(createShopCardElement(staffFryer, true));
+  container.appendChild(createShopCardElement(upgStove, false));
+  container.appendChild(createShopCardElement(upgShoes, false));
+  container.appendChild(createShopCardElement(upgSign, false));
 }
 
 function updateHiredStaff() {

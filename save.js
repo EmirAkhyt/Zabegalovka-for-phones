@@ -1,6 +1,5 @@
-const SAVE_KEY = 'zabegalovka_save_v1';
+const SAVE_KEY = 'zabegalovka_save_v2';
 
-// Сохраняем весь прогресс в память браузера
 function saveGameProgress() {
   const data = {
     currentDay: currentDay,
@@ -8,16 +7,16 @@ function saveGameProgress() {
     dailyGoal: dailyGoal,
     hasSecondShop: hasSecondShop,
     profitMultiplier: profitMultiplier,
-    sashaHired: staffFryer.hired
+    sashaHired: staffFryer.hired,
+    upgStove: upgStove.bought,
+    upgShoes: upgShoes.bought,
+    upgSign: upgSign.bought
   };
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-  } catch (e) {
-    // Игнорируем ошибку, если хранилище заблокировано
-  }
+  } catch (e) {}
 }
 
-// Загружаем сохранённый прогресс при старте игры
 function loadGameProgress() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
@@ -30,12 +29,12 @@ function loadGameProgress() {
     if (typeof data.hasSecondShop === 'boolean') hasSecondShop = data.hasSecondShop;
     if (typeof data.profitMultiplier === 'number') profitMultiplier = data.profitMultiplier;
     if (typeof data.sashaHired === 'boolean') staffFryer.hired = data.sashaHired;
-  } catch (e) {
-    // Если сохранение повреждено — начинаем с нуля
-  }
+    if (typeof data.upgStove === 'boolean') upgStove.bought = data.upgStove;
+    if (typeof data.upgShoes === 'boolean') upgShoes.bought = data.upgShoes;
+    if (typeof data.upgSign === 'boolean') upgSign.bought = data.upgSign;
+  } catch (e) {}
 }
 
-// Сброс прогресса (кнопка в Главном меню)
 function resetGameProgress() {
   localStorage.removeItem(SAVE_KEY);
   currentDay = 1;
@@ -45,6 +44,9 @@ function resetGameProgress() {
   hasSecondShop = false;
   profitMultiplier = 1;
   staffFryer.hired = false;
+  upgStove.bought = false;
+  upgShoes.bought = false;
+  upgSign.bought = false;
   sashaHoldingPatty = false;
   timeMinutes = 480;
   isDayEnded = false;
@@ -53,6 +55,10 @@ function resetGameProgress() {
   isClosed = false;
   hasPattyOnPan = false;
   cookLevel = 0;
+  hasFriesOnTray = false;
+  hasColaOnTray = false;
+  isFryingPotatoes = false;
+  fryerLevel = 0;
 
   updateDayUI();
   refreshMainMenuStats();
