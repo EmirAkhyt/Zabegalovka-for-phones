@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f172a">
+  <title>Забегаловка — 3D Кухня</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Главное меню игры -->
+  <div id="main-menu-overlay">
+    <div class="menu-box">
+      <div class="menu-badge">3D СИМУЛЯТОР ПОВАРА • АВТОСОХРАНЕНИЕ</div>
+      <h1>🍔 ЗАБЕГАЛОВКА</h1>
+      <p class="menu-sub">Готовь бургеры от первого лица и нанимай персонал!</p>
+
+      <div class="menu-stats-row">
+        <div class="stat-pill">📅 Текущий день: <b id="menu-day-val">1</b></div>
+        <div class="stat-pill">💰 Баланс кассы: <b id="menu-total-coins">0</b> ₽</div>
+      </div>
+
+      <div class="menu-help">
+        <div><b>ПК:</b> W A S D + Мышь + E</div>
+        <div><b>Телефон:</b> Джойстик слева + Камера справа + Кнопка [E]</div>
+      </div>
+
+      <button class="menu-btn" id="btn-start-main">▶ НАЧАТЬ ИГРУ</button>
+      <button class="menu-btn secondary" id="btn-sound-main">🔊 Звук: ВКЛ</button>
+      <button class="menu-btn danger" id="btn-reset-save">🗑️ Сбросить сохранение</button>
+    </div>
+  </div>
+
+  <!-- Меню паузы -->
+  <div id="pause-overlay" style="display: none;">
+    <div class="menu-box">
+      <h1>⏸ ПАУЗА</h1>
+      <p class="menu-sub">Прогресс сохраняется автоматически</p>
+      <button class="menu-btn" id="btn-resume">▶ ПРОДОЛЖИТЬ</button>
+      <button class="menu-btn secondary" id="btn-sound-pause">🔊 Звук: ВКЛ</button>
+      <button class="menu-btn danger" id="btn-to-main">🏠 В ГЛАВНОЕ МЕНЮ</button>
+    </div>
+  </div>
+
+  <!-- Окно итогов рабочего дня -->
+  <div id="day-end-overlay" style="display: none;">
+    <div class="menu-box">
+      <h1 id="day-end-title">🌙 Смена окончена!</h1>
+      <p class="menu-sub" id="day-end-subtitle">Итоги дня</p>
+      <div class="menu-help" id="day-end-stats" style="text-align: center; font-size: 16px;"></div>
+      <button class="menu-btn" id="btn-next-day">▶ НАЧАТЬ СЛЕДУЮЩИЙ ДЕНЬ</button>
+    </div>
+  </div>
+
+  <!-- Окно покупки второй Забегаловки (появляется в начале 4 дня) -->
+  <div id="second-shop-overlay" style="display: none;">
+    <div class="menu-box" style="border-color: #22c55e;">
+      <div class="menu-badge">РАСШИРЕНИЕ БИЗНЕСА • ДЕНЬ 4</div>
+      <h1>🏪 ВТОРАЯ ЗАБЕГАЛОВКА</h1>
+      <p class="menu-sub">Открой вторую точку в центре города и получай двойную выручку с каждого бургера!</p>
+      <div class="menu-help" style="text-align: center; font-size: 15px;">
+        🎁 Бонус: <b>Прибыль со всех заказов ×2</b><br>
+        💵 В кассе сейчас: <b id="shop2-coins">0</b> ₽<br>
+        🏷️ Стоимость открытия: <b>5000 ₽</b>
+      </div>
+      <div id="shop2-msg" style="color: #f87171; font-weight: bold; font-size: 14px; margin-bottom: 10px;"></div>
+      <button class="menu-btn" id="btn-buy-second-shop">🏪 КУПИТЬ ЗА 5000 ₽ (ПРИБЫЛЬ ×2)</button>
+      <button class="menu-btn secondary" id="btn-skip-second-shop">Пока пропустить</button>
+    </div>
+  </div>
+
+  <!-- Красное уведомление об ограблении на следующий день (10% шанс) -->
+  <div id="robbery-banner" style="display: none; position: fixed; top: 82px; left: 50%; transform: translateX(-50%); background: #dc2626; color: #ffffff; border: 3px solid #fef08a; padding: 14px 28px; border-radius: 16px; font-size: 20px; font-weight: 900; letter-spacing: 1px; z-index: 90; box-shadow: 0 10px 30px rgba(220, 38, 38, 0.85); pointer-events: none; text-align: center;">
+    🚨 ВАС ОБОКРАЛИ! Баланс кассы: 0 ₽
+  </div>
+
+  <!-- Окно компьютера: сайт ПоварБургер.com -->
+  <div id="computer-overlay" style="display: none;">
+    <div class="browser-window">
+      <div class="browser-header">
+        <div class="browser-dots">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+        </div>
+        <div class="browser-url">🔒 https://<b>ПоварБургер.com</b>/vacancies</div>
+        <button class="browser-close" id="btn-close-pc">✕ Закрыть</button>
+      </div>
+
+      <div class="browser-body">
+        <div class="site-banner">
+          <div>
+            <h2>👨‍🍳 ПоварБургер.com — Биржа поваров</h2>
+            <p>Найми помощника, чтобы автоматизировать жарку котлет!</p>
+          </div>
+          <div class="pc-balance">Баланс: <span id="pc-coins-val">0</span> ₽</div>
+        </div>
+
+        <div class="workers-list" id="workers-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Верхняя панель в игре -->
+  <div id="ui-top">
+    <div class="panel">
+      📅 День <span id="day-num">1</span> &nbsp;|&nbsp; 🕒 <span id="clock-text">08:00</span>
+    </div>
+    <div class="panel">🍔 <span id="order-desc">Ожидание клиента...</span></div>
+    <div class="panel coins-box">
+      💵 Касса: <span id="wallet-coins">0</span> ₽ <span id="profit-mult-badge" style="color:#facc15;"></span> &nbsp;|&nbsp; 🎯 План: <span id="day-coins">0</span>/<span id="day-goal">500</span> ₽
+    </div>
+    <button id="btn-mobile-pause" title="Пауза">⏸</button>
+  </div>
+
+  <!-- Сенсорное управление для телефона (джойстик слева + кнопка действия справа) -->
+  <div id="mobile-controls">
+    <div id="joy-zone">
+      <div id="joy-base">
+        <div id="joy-stick"></div>
+      </div>
+    </div>
+    <button id="btn-mobile-action" type="button">✋ ДЕЙСТВИЕ [E]</button>
+  </div>
+
+  <!-- Прицел и подсказки -->
+  <div id="crosshair"></div>
+  <div id="interact-prompt">Нажми [E]</div>
+  <div id="status-bar">Подойди к столам или компьютеру слева и нажми [E]</div>
+
+  <canvas id="game3d"></canvas>
+
+  <script src="menu.js"></script>
+  <script src="daytime.js"></script>
+  <script src="controls.js"></script>
+  <script src="customers.js"></script>
+  <script src="computer.js"></script>
+  <script src="save.js"></script>
+  <script src="kitchen.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>
