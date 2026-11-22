@@ -1,16 +1,43 @@
 {
+  "id": "com.zabegalovka.burger3d.game",
   "name": "Забегаловка — 3D Кухня",
   "short_name": "Забегаловка",
+  "description": "3D симулятор повара от первого лица: жарь сочные котлеты, собирай бургеры по заказам клиентов, нанимай помощников через ПоварБургер.com и развивай сеть закусочных!",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "fullscreen",
   "orientation": "landscape",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
+  "categories": ["games", "simulation"],
   "icons": [
     {
-      "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTaMLbiXotiyzLXH0huWfi2PtFvw-WSxg7xeoNJ8UlhIQ&s=10",
+      "src": "https://images.icon-icons.com/1555/PNG/512/fast-food-icons-freeburger_107425.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://images.icon-icons.com/1555/PNG/512/fast-food-icons-freeburger_107425.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://unsplash.com",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Приготовление сочных 3D-бургеров на кухне Забегаловки"
+    },
+    {
+      "src": "https://unsplash.com",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Выполнение дневного плана и развитие бизнеса"
     }
   ]
 }
