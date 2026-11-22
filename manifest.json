@@ -1,8 +1,10 @@
 {
-  "id": "com.zabegalovka.burger3d.game",
+  "id": "com.zabegalovka.burger3d.app",
   "name": "Забегаловка — 3D Кухня",
   "short_name": "Забегаловка",
   "description": "3D симулятор повара от первого лица: жарь сочные котлеты, собирай бургеры по заказам клиентов, нанимай помощников через ПоварБургер.com и развивай сеть закусочных!",
+  "lang": "ru",
+  "dir": "ltr",
   "start_url": "./index.html",
   "scope": "./",
   "display": "fullscreen",
@@ -12,13 +14,19 @@
   "categories": ["games", "simulation"],
   "icons": [
     {
-      "src": "https://images.icon-icons.com/1555/PNG/512/fast-food-icons-freeburger_107425.png",
+      "src": "https://placehold.co",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://placehold.co",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://images.icon-icons.com/1555/PNG/512/fast-food-icons-freeburger_107425.png",
+      "src": "https://placehold.co",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -26,17 +34,25 @@
   ],
   "screenshots": [
     {
-      "src": "https://www.google.com/imgres?q=%D1%84%D0%BE%D1%82%D0%BE%201280%D1%85720&imgurl=https%3A%2F%2Ffikiwiki.com%2Fuploads%2Fposts%2F2022-02%2F1644928487_1-fikiwiki-com-p-kartinki-1280-na-720-1.jpg&imgrefurl=https%3A%2F%2Ffikiwiki.com%2Fkartinki%2F926-kartinki-1280-na-720-56-foto.html&docid=L5YvBHcsXKwqEM&tbnid=xEzzGEkKsGnPNM&vet=12ahUKEwiH_KrUgZyYAxXcHBAIHZfAD2kQnPAOegQIPxAA..i&w=1280&h=720&hcb=2&ved=2ahUKEwiH_KrUgZyYAxXcHBAIHZfAD2kQnPAOegQIPxAA"
-      "type": "image/jpeg",
-      "form_factor": "wide",
-      "label": "Приготовление сочных 3D-бургеров на кухне Забегаловки"
-    },
-    {
-      "src": "https://www.google.com/imgres?q=%D1%84%D0%BE%D1%82%D0%BE%201280%D1%85720&imgurl=https%3A%2F%2Ffikiwiki.com%2Fuploads%2Fposts%2F2022-02%2F1644928487_1-fikiwiki-com-p-kartinki-1280-na-720-1.jpg&imgrefurl=https%3A%2F%2Ffikiwiki.com%2Fkartinki%2F926-kartinki-1280-na-720-56-foto.html&docid=L5YvBHcsXKwqEM&tbnid=xEzzGEkKsGnPNM&vet=12ahUKEwiH_KrUgZyYAxXcHBAIHZfAD2kQnPAOegQIPxAA..i&w=1280&h=720&hcb=2&ved=2ahUKEwiH_KrUgZyYAxXcHBAIHZfAD2kQnPAOegQIPxAA",
+      "src": "https://picsum.photos",
       "sizes": "1280x720",
       "type": "image/jpeg",
       "form_factor": "wide",
-      "label": "Выполнение дневного плана и развитие бизнеса"
+      "label": "Приготовление еды на 3D-кухне Забегаловки"
+    },
+    {
+      "src": "https://picsum.photos",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Обслуживание клиентов и развитие закусочной"
+    },
+    {
+      "src": "https://picsum.photos",
+      "sizes": "720x1280",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Мобильная версия игры Забегаловка"
     }
   ]
 }
